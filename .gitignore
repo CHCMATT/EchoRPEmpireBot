@@ -1,0 +1,7 @@
+.env
+package.json
+package-lock.json
+docs-creds.json
+drive-creds.json
+sheets-creds.json
+/node_modules
