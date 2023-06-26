@@ -1,6 +1,7 @@
 let moment = require('moment');
 let dbCmds = require('./dbCmds.js');
 let editEmbed = require('./editEmbed.js');
+let personnelCmds = require('./personnelCmds.js');
 let { EmbedBuilder, time } = require('discord.js');
 
 function strCleanup(str) {
@@ -21,45 +22,24 @@ module.exports.modalSubmit = async (interaction) => {
 					salespersonName = interaction.member.user.username;
 				}
 
-				var now = Math.floor(new Date().getTime() / 1000.0);
-				var saleDate = time(now, 'd');
-				var contractEndDateTime = now + (86400 * 60); // 86400 seconds in a day times 60 days
-				var contractEndDate = time(contractEndDateTime, 'd');
-				var contractEndDateRelative = time(contractEndDateTime, 'R');
+				let now = Math.floor(new Date().getTime() / 1000.0);
+				let saleDate = time(now, 'd');
+				let contractEndDateTime = now + (86400 * 60); // 86400 seconds in a day times 60 days
+				let contractEndDate = time(contractEndDateTime, 'd');
+				let contractEndDateRelative = time(contractEndDateTime, 'R');
 
-				var clientName = strCleanup(interaction.fields.getTextInputValue('clientNameInput'));
-				var clientInfo = strCleanup(interaction.fields.getTextInputValue('clientInfoInput'));
-				var clientContact = strCleanup(interaction.fields.getTextInputValue('clientContactInput'));
-				var lotNumStreetName = strCleanup(interaction.fields.getTextInputValue('lotNumStreetNameInput'));
-				var price = Math.abs(Number(strCleanup(interaction.fields.getTextInputValue('priceInput')).replaceAll(',', '').replaceAll('$', '')));
-
-				if (isNaN(price)) { // validate quantity of money
-					await interaction.editReply({
-						content: `:exclamation: \`${interaction.fields.getTextInputValue('priceInput')}\` is not a valid number, please be sure to only enter numbers.`,
-						ephemeral: true
-					});
-					return;
-				}
-
-				var downPayment = (price * 0.3);
-				var interest = ((price - downPayment) * .14);
-				var amountOwed = (price - downPayment + interest);
-				var totalOwed = (price + interest);
-
-				var formattedPrice = formatter.format(price);
-				var formattedDownPayment = formatter.format(downPayment);
-				var formattedAmountOwed = formatter.format(amountOwed);
-				var formattedTotalOwed = formatter.format(totalOwed);
-				var formattedInterest = formatter.format(interest);
+				let buyerName = strCleanup(interaction.fields.getTextInputValue('buyerName'));
+				let buyerCid = strCleanup(interaction.fields.getTextInputValue('buyerCid'));
+				let vehicleName = strCleanup(interaction.fields.getTextInputValue('vehicleName'));
 
 				let newFile = await interaction.client.driveFiles.copy({
-					auth: interaction.client.driveAuth, fileId: process.env.FINANCE_TEMPLATE_DOC_ID, resource: { name: `${clientName} | Dynasty 8 Financing & Sales Agreement` }
+					auth: interaction.client.driveAuth, fileId: process.env.PURCHASE_AGREEMENT_TEMPLATE_DOC_ID, resource: { name: `${buyerName} - Empire Imports Purchase Agreement` }
 				});
 
 				let documentLink = `https://docs.google.com/document/d/${newFile.data.id}`;
 
 				await interaction.client.googleSheets.values.append({
-					auth: interaction.client.sheetsAuth, spreadsheetId: process.env.BACKUP_DATA_SHEET_ID, range: "Finance Agreements!A:G", valueInputOption: "RAW", resource: { values: [[`${realtorName} (<@${interaction.user.id}>)`, saleDate, clientName, clientInfo, clientContact, lotNumStreetName, price, documentLink]] }
+					auth: interaction.client.sheetsAuth, spreadsheetId: process.env.BACKUP_DATA_SHEET_ID, range: "Purchase Agreements!A:E", valueInputOption: "RAW", resource: { values: [[`${salespersonName} (<@${interaction.user.id}>)`, saleDate, buyerName, buyerCid, vehicleName]] }
 				});
 
 				let todayDate = moment().format('MMMM DD, YYYY');
@@ -68,25 +48,25 @@ module.exports.modalSubmit = async (interaction) => {
 					auth: interaction.client.driveAuth, documentId: newFile.data.id, resource: {
 						requests: [{
 							replaceAllText: {
-								replaceText: clientName,
+								replaceText: buyerName,
 								containsText: {
-									"text": "{client_name}",
+									"text": "{buyer_name}",
 									"matchCase": true
 								}
 							},
 						}, {
 							replaceAllText: {
-								replaceText: clientInfo,
+								replaceText: buyerCid,
 								containsText: {
-									"text": "{client_info}",
+									"text": "{buyer_cid}",
 									"matchCase": true
 								}
 							},
 						}, {
 							replaceAllText: {
-								replaceText: clientContact,
+								replaceText: vehicleName,
 								containsText: {
-									"text": "{client_contact}",
+									"text": "{vehicle_name}",
 									"matchCase": true
 								}
 							},
@@ -100,49 +80,9 @@ module.exports.modalSubmit = async (interaction) => {
 							},
 						}, {
 							replaceAllText: {
-								replaceText: lotNumStreetName,
+								replaceText: salespersonName,
 								containsText: {
-									"text": "{street_address}",
-									"matchCase": true
-								}
-							},
-						}, {
-							replaceAllText: {
-								replaceText: formattedPrice,
-								containsText: {
-									"text": "{purchase_price}",
-									"matchCase": true
-								}
-							},
-						}, {
-							replaceAllText: {
-								replaceText: formattedDownPayment,
-								containsText: {
-									"text": "{down_payment}",
-									"matchCase": true
-								}
-							},
-						}, {
-							replaceAllText: {
-								replaceText: formattedTotalOwed,
-								containsText: {
-									"text": "{total_owed}",
-									"matchCase": true
-								}
-							},
-						}, {
-							replaceAllText: {
-								replaceText: financeNum,
-								containsText: {
-									"text": "{financing_number}",
-									"matchCase": true
-								}
-							},
-						}, {
-							replaceAllText: {
-								replaceText: realtorName,
-								containsText: {
-									"text": "{realtor_name}",
+									"text": "{salesperson_name}",
 									"matchCase": true
 								}
 							},
@@ -150,39 +90,35 @@ module.exports.modalSubmit = async (interaction) => {
 					}
 				});
 
-				var embeds = [new EmbedBuilder()
-					.setTitle('A new Financing Agreement has been submitted!')
+				let embeds = [new EmbedBuilder()
+					.setTitle('A new Purchase Agreement has been filed!')
 					.addFields(
-						{ name: `Realtor Name:`, value: `${realtorName} (<@${interaction.user.id}>)` },
+						{ name: `Salesperson:`, value: `${salespersonName} (<@${interaction.user.id}>)` },
 						{ name: `Sale Date:`, value: `${saleDate}`, inline: true },
-						{ name: `Latest Payment:`, value: `${saleDate}`, inline: true },
-						{ name: `Next Payment Due:`, value: `${nextPaymentDate} (${nextPaymentDateRelative})`, inline: true },
-						{ name: `Financing ID Number:`, value: `${financeNum}` },
-						{ name: `Client Name:`, value: `${clientName}`, inline: true },
-						{ name: `Client Info:`, value: `${clientInfo}`, inline: true },
-						{ name: `Client Contact:`, value: `${clientContact}`, inline: true },
-						{ name: `Street Address:`, value: `${lotNumStreetName}` },
-						{ name: `Sale Price:`, value: `${formattedPrice}`, inline: true },
-						{ name: `Down Payment:`, value: `${formattedDownPayment}`, inline: true },
-						{ name: `Amount Owed:`, value: `${formattedAmountOwed}`, inline: true },
-						{ name: `Financing Agreement:`, value: `${documentLink}` },
+						{ name: `Contract End Date:`, value: `${contractEndDate} (${contractEndDateRelative})`, inline: true },
+						{ name: `Buyer Name:`, value: `${buyerName}` },
+						{ name: `Buyer CID:`, value: `${buyerCid}` },
+						{ name: `Vehicle Name:`, value: `${vehicleName}` },
+						{ name: `Purchase Agreement:`, value: `[Click to view the Purchase Agreement](${documentLink})` },
 					)
-					.setColor('FAD643')];
+					.setColor('4EA8DE')];
 
-				await interaction.client.channels.cache.get(process.env.FINANCING_AGREEMENTS_CHANNEL_ID).send({ embeds: embeds });
+				await interaction.client.channels.cache.get(process.env.PURCHASE_AGREEMENTS_CHANNEL_ID).send({ embeds: embeds });
 
-				await dbCmds.addOneSumm("countFinancialAgreements");
-				await dbCmds.addOneSumm("countMonthlyFinancialAgreements");
-				await dbCmds.addOneSumm("activeFinancialAgreements");
-				await dbCmds.addValueSumm("activeFinancialAmount", Math.round(amountOwed));
-				await dbCmds.addOnePersStat(interaction.member.user.id, "financialAgreements");
-				await dbCmds.addOnePersStat(interaction.member.user.id, "monthlyFinancialAgreements");
+				let personnelStats = await dbCmds.readPersStats(interaction.member.user.id);
+				if (personnelStats == null || personnelStats.charName == null) {
+					await personnelCmds.initPersonnel(interaction.client, interaction.member.user.id);
+				}
+
+				await dbCmds.addOneSumm("countPurchaseAgreements");
+				await dbCmds.addOnePersStat(interaction.user.id, "purchaseAgreements");
 
 				await editEmbed.editEmbed(interaction.client);
 
-				var newFinancialAgreementsTotal = await dbCmds.readSummValue("countFinancialAgreements");
+				let newPurchaseAgreementsTotal = await dbCmds.readSummValue("countPurchaseAgreements");
 
-				await interaction.editReply({ content: `Successfully added \`1\` to the \`Financial Agreements\` counter and added this sale to the <#${process.env.FINANCING_AGREEMENTS_CHANNEL_ID}> channel - the new total is \`${newFinancialAgreementsTotal}\`.\n\nDetails about this agreement:\n> Sale Price: \`${formattedPrice}\`\n> Down Payment: \`${formattedDownPayment}\`\n> Interest Cost: \`${formattedInterest}\`\n> Amount Owed Remaining: \`${formattedAmountOwed}\`\n> Financing Agreement: <${documentLink}>`, ephemeral: true });
+				await interaction.editReply({ content: `Successfully created a new Purchase Agreement! There have now been \`${newPurchaseAgreementsTotal}\` total Purchase Agreements created.\n\nDetails about this agreement:\n> Buyer Name: \`${buyerName}\`\n> Buyer CID: \`${buyerCid}\`\n> Vehicle Name: \`${vehicleName}\`\n> [Click to view the Purchase Agreement](<${documentLink}>)`, ephemeral: true });
+
 				break;
 			default:
 				await interaction.reply({
