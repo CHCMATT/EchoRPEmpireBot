@@ -3,6 +3,7 @@ require("dotenv/config");
 let mongoose = require("mongoose");
 let startup = require('./startup.js');
 let { google } = require('googleapis');
+let message = require('./dsMessages.js');
 let interact = require('./dsInteractions.js');
 let { Client, Collection, GatewayIntentBits, time } = require('discord.js');
 
