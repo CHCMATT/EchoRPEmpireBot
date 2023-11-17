@@ -5,9 +5,8 @@ let startup = require('./startup.js');
 let { google } = require('googleapis');
 let message = require('./dsMessages.js');
 let interact = require('./dsInteractions.js');
-let { Client, Collection, GatewayIntentBits, time } = require('discord.js');
-
-let client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers], partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+let { Client, Collection, GatewayIntentBits, Partials, time } = require('discord.js');
+let client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.DirectMessages], partials: [Partials.Channel, Partials.Message, Partials.Reaction] });
 
 client.commands = new Collection();
 client.buttons = new Collection();
@@ -87,6 +86,7 @@ client.once('ready', async () => {
 	}
 
 	interact(client); // Fire whenever an interaction is created
+	message(client); // Fire whenever a message is created
 	console.log(`[${fileName}] Connected to ${client.guilds.cache.size} guild(s).`); // Lists the number of guilds that the client is connected to
 	let keys = client.guilds.cache.keys(); // Gets the keys for the map object from the guilds object
 	for (let entry of keys) { // For each guild
