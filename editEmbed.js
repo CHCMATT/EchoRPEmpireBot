@@ -26,12 +26,12 @@ module.exports.editEmbed = async (client) => {
 		}
 
 		let overallStatsEmbed = new EmbedBuilder()
-			.setTitle(`Overall Salesperson Statistics as of ${today}:`)
+			.setTitle(`Salesperson Statistics as of ${today}:`)
 			.setDescription(overallDescList)
 			.setColor('5390D9');
 
 		let purchaseAgreementsEmbed = new EmbedBuilder()
-			.setTitle('Amount of Purchase Agreements Created:')
+			.setTitle('Purchase Agreements Created:')
 			.setDescription(countPurchaseAgreements)
 			.setColor('4EA8DE');
 
