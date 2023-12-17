@@ -4,6 +4,14 @@ let editEmbed = require('./editEmbed.js');
 let personnelCmds = require('./personnelCmds.js');
 let { EmbedBuilder, time } = require('discord.js');
 
+function toTitleCase(str) {
+	str = str.toLowerCase().split(' ');
+	for (let i = 0; i < str.length; i++) {
+		str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+	}
+	return str.join(' ');
+}
+
 function strCleanup(str) {
 	let cleaned = str.replaceAll('`', '-').replaceAll('\\', '-').trimEnd().trimStart();
 	return cleaned;
@@ -28,9 +36,9 @@ module.exports.modalSubmit = async (interaction) => {
 				let contractEndDate = time(contractEndDateTime, 'd');
 				let contractEndDateRelative = time(contractEndDateTime, 'R');
 
-				let buyerName = strCleanup(interaction.fields.getTextInputValue('buyerName'));
+				let buyerName = toTitleCase(strCleanup(interaction.fields.getTextInputValue('buyerName')));
 				let buyerCid = strCleanup(interaction.fields.getTextInputValue('buyerCid'));
-				let vehicleName = strCleanup(interaction.fields.getTextInputValue('vehicleName'));
+				let vehicleName = toTitleCase(strCleanup(interaction.fields.getTextInputValue('vehicleName')));
 
 				let newFile = await interaction.client.driveFiles.copy({
 					auth: interaction.client.driveAuth, fileId: process.env.PURCHASE_AGREEMENT_TEMPLATE_DOC_ID, resource: { name: `${buyerName} - Empire Imports Purchase Agreement` }
