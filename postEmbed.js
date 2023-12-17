@@ -11,8 +11,7 @@ module.exports.postEmbed = async (client) => {
 
 		for (let i = 0; i < salespersonStats.length; i++) {
 			if (salespersonStats[i].purchaseAgreements > 0) {
-				overallDescList = overallDescList.concat(`__${salespersonStats[i].charName}__: 
-• Purchase Agreements: ${salespersonStats[i].purchaseAgreements}\n\n`);
+				overallDescList = overallDescList.concat(`<@${salespersonStats[i].discordId}>\n• Agreements Created: ${salespersonStats[i].purchaseAgreements}\n\n`);
 			}
 		}
 
