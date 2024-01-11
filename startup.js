@@ -12,7 +12,7 @@ module.exports.startUp = async (client) => {
 		await editEmbed.editEmbed(client);
 		return "edited";
 	}
-	catch (error) {
+	catch {
 		await postEmbed.postEmbed(client);
 		return "posted";
 	}
